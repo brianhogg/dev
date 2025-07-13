@@ -112,6 +112,15 @@ const deprecatedFunctions = [
 
 
 const defaultReplacements = [
+	// Replace define( '*_VERSION', 'x.x.x' ); with the current version.
+	// This is used to update the version in the plugin's main file.
+	[
+		'./*.php',
+		'(?<=define\\( \'(?:ECN_PRO|TECS).*_VERSION\', \')(.*)(?=\' \\);)',
+		'g',
+		true,
+	],
+
 	// 1. Replace [version] placeholder in all @since, @version, and @deprecated tags.
 	[ 
 		'./**',
