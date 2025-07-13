@@ -139,7 +139,7 @@ const defaultReplacements = [
 
 	// 3. Replace plugin metadata "Version" with current version.
 	[ 
-		'./*.php',
+		'./*.php,./readme.txt',
 		'(?<=[Vv]ersion *[:=] *[ \'\"])(0|[1-9]\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?',
 		'g',
 		true,
