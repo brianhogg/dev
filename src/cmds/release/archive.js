@@ -15,7 +15,7 @@ module.exports = {
 	description: 'Build a distribution archive (.zip) file for the project.',
 	options: [
 		[ '-i, --inspect', 'Automatically unzip the zip file after creation.', false ],
-		[ '-d, --dir <dir>', 'Directory where the generated archive file will be saved, relative to the project root directory.', 'dist' ],
+		[ '-d, --dir <dir>', 'Directory where the generated archive file will be saved, relative to the project root directory.', 'archive' ],
 		[ '-v, --verbose', 'Output extra information with result messages.', false ],
 	],
 	action: ( { inspect, dir, verbose } ) => {
