@@ -335,6 +335,17 @@ Options:
   -n, --no-merge                    Disable merging before release creation.
                                     Automatically passed when publishing a
                                     prerelease.
+  -e, --edd-download-id <id>        Easy Digital Downloads download ID. When
+                                    set, the archive and release notes are also
+                                    published to the EDD store after the GitHub
+                                    release is created. Usually set per project
+                                    in .llmsdev.yml. The store endpoint URL and
+                                    secret are read from the EDD_RELEASE_URL
+                                    and EDD_RELEASE_SECRET environment
+                                    variables. Prereleases and drafts are not
+                                    published to the store.
+  -E, --no-edd                      Skip publishing to the EDD store even when
+                                    --edd-download-id is set.
   -Y, --yes                         Skip confirmations.
   -v, --verbose                     Output extra information with result
                                     messages.
@@ -404,3 +415,26 @@ changelog.add
   type: added
 
 ```
+
+
+## Publishing releases to Easy Digital Downloads
+
+`release create` can also publish a release to an Easy Digital Downloads store that uses Software Licensing, so customers get the update through the normal license update check. It is off unless the project sets an EDD download ID; projects without one release exactly as before.
+
+The store needs the "EDD Release Endpoint" mu-plugin, which adds `/wp-json/edd-release/v1/publish` and requires `define( 'EDD_RELEASE_SECRET', '...' );` in `wp-config.php`.
+
+Set the download ID per project in `.llmsdev.yml`:
+
+```yaml
+release.create:
+  edd-download-id: 1234
+```
+
+Set the endpoint and secret in your environment, never in a committed file:
+
+```bash
+export EDD_RELEASE_URL="https://example.com/wp-json/edd-release/v1/publish"
+export EDD_RELEASE_SECRET="..."
+```
+
+Before pushing anything, `release create` checks that the store accepts the secret and has the download, and stops if it doesn't. After `gh release create` it uploads `dist/<slug>-<version>.zip` and the same release notes used for the GitHub release. The store replaces the download's update file and sets the Software Licensing version, and adds the notes to the top of the Software Licensing changelog. Prereleases and drafts are not published to the store. Pass `--no-edd` to skip the store for one release.

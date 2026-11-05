@@ -1,0 +1,5 @@
+significance: minor
+type: added
+entry: "New `--edd-download-id` option for `release create`: after creating the
+  GitHub release, publish the archive and release notes to an Easy Digital
+  Downloads + Software Licensing store. Pass `--no-edd` to skip it."

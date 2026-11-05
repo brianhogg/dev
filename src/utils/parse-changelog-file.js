@@ -46,6 +46,7 @@ function finalizeEntry( entry ) {
  * Convert a changelog file to a JSON object
  *
  * @since 0.0.1
+ * @since [version] Ignore everything before the first version header instead of always skipping the first three lines.
  *
  * @param {string} file Path to the changelog MD file.
  * @return {Object[]} Changelog as an array of JSON objects.
@@ -55,9 +56,6 @@ module.exports = ( file ) => {
 		lines = changelog.split( '\n' ),
 		logs = [],
 		regex = /v(?<version>[0-9]\d*\.[0-9]\d*\.[0-9]\d*(?:-(?:[0-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:[0-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?) - (?<date>\d{4}\-\d{2}\-\d{2})/;
-
-	// Remove title, title underline, and first blank line.
-	lines.splice( 0, 3 );
 
 	let currEntry = {};
 
@@ -76,13 +74,16 @@ module.exports = ( file ) => {
 			}
 
 			currEntry = getEntryObject( parsed.groups.date, parsed.groups.version );
-		} else {
+		} else if ( currEntry.logs ) {
+			// Lines before the first version header, such as the file's title, are ignored.
 			currEntry.logs.push( line );
 		}
 	} );
 
 	// The final entry in the changelog won't get caught by the next parsed date so we'll finalize that entry here at the end.
-	logs.push( finalizeEntry( currEntry ) );
+	if ( currEntry.logs ) {
+		logs.push( finalizeEntry( currEntry ) );
+	}
 
 	return logs;
 };

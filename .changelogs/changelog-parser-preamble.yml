@@ -1,0 +1,4 @@
+significance: patch
+type: fixed
+entry: Fixed changelog parsing, used by `release create`, for changelog files
+  that do not start with exactly a title, an underline, and a blank line.

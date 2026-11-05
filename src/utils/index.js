@@ -18,6 +18,7 @@ const
 	parseChangelogFile = require( './parse-changelog-file' ),
 	parseIssueString = require( './parse-issue-string' ),
 	parseMainFileMetadata = require( './pare-main-file-metadata' ), 
+	{ checkEddDownload, publishToEdd } = require( './publish-to-edd' ),
 	pushDistFile = require( './push-dist-file' ),
 	{ isAttributionValid, isEntryValid, isLinkValid, getChangelogValidationIssues } = require( './validate-changelog' );
 
@@ -50,5 +51,7 @@ module.exports = {
 	parseChangelogFile,
 	parseIssueString,
 	parseMainFileMetadata,
+	publishToEdd,
+	checkEddDownload,
 	pushDistFile,
 };
