@@ -167,6 +167,7 @@ const defaultReplacements = [
  *
  * @since 0.0.1
  * @since 0.2.0 Added 4th parameter to the replacement arrays to allow excluding replacement sets when building a prerelease.
+ * @since [version] Exclude Markdown files by default.
  *
  * @type {Object}
  */
@@ -179,7 +180,7 @@ module.exports = {
 		[ '-F, --force <version>', 'Specify an explicit version instead of incrementing the current version with --increment.' ],
 		[ '-r, --replacements <replacement...>]', 'Replacements to be made. Each replacement is an array containing a list of globs for the files to be tested, a regex used to perform the replacement, an optional list of RegEx flags (defaults to `g` if not supplied), and a boolean used to specify if the replacement should be run when building a prerelease (defaults to `false` if not supplied). It is recommended that this argument to configured via a configuration file as opposed to being passed via a CLI flag.', defaultReplacements ],
 		[ '-e, --extra-replacements <replacement...>]', 'Additional replacements added to --replacements array. This option allows adding to the default replacements instead of overwriting them.', [] ],
-		[ '-E, --exclude <glob...>', 'Specify files to exclude from the update.', './vendor/**, ./node_modules/**, ./tmp/**, ./dist/**, ./docs/**, ./packages/**' ],
+		[ '-E, --exclude <glob...>', 'Specify files to exclude from the update.', './vendor/**, ./node_modules/**, ./tmp/**, ./dist/**, ./docs/**, ./packages/**, ./**/*.md' ],
 		[ '-s, --skip-config', 'Skip updating the version of the package.json or composer.json file.' ],
 	],
 	action: ( { increment, preid, exclude, force, skipConfig, replacements, extraReplacements } ) => {
