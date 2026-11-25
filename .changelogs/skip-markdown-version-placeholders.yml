@@ -1,0 +1,5 @@
+significance: patch
+type: fixed
+entry: Fixed `update-version` (and `release prepare`) replacing `[version]` in
+  Markdown files, such as an AGENTS.md rule telling contributors to write
+  `@since [version]`.
