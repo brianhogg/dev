@@ -3,7 +3,7 @@ const
 	{ existsSync, writeFileSync } = require( 'fs' ),
 	chalk = require( 'chalk' ),
 	inquirer = require( 'inquirer' ),
-	{ getCurrentVersion, getChangelogForVersion, getArchiveFilename, logResult, checkEddDownload, publishToEdd, pushDistFile, execSync } = require( '../../utils' );
+	{ getCurrentVersion, getChangelogForVersion, getArchiveFilename, logResult, checkEddDownload, publishToEdd, notifySlack, getProjectSlug, pushDistFile, execSync } = require( '../../utils' );
 
 /**
  * Retrieve the release notes for a version: its changelog entry with a version and date header.
@@ -42,6 +42,7 @@ function writeTempNotesFile( notes ) {
 
 
 module.exports = {
+	getReleaseNotes,
 	command: 'create',
 	description: 'Create a GitHub release and tag from a specified file or branch.',
 	options: [
@@ -58,6 +59,7 @@ module.exports = {
 		[ '-n, --no-merge', 'Disable merging before release creation. Automatically passed when publishing a prerelease.' ],
 		[ '-e, --edd-download-id <id>', 'Easy Digital Downloads download ID. When set, the archive and release notes are also published to the EDD store after the GitHub release is created. Usually set per project in .llmsdev.yml. The store endpoint URL and secret are read from the EDD_RELEASE_URL and EDD_RELEASE_SECRET environment variables. Prereleases and drafts are not published to the store.' ],
 		[ '-E, --no-edd', 'Skip publishing to the EDD store even when --edd-download-id is set.' ],
+		[ '-S, --no-slack', 'Skip the Slack announcement even when the SLACK_WEBHOOK_URL environment variable is set.' ],
 		[ '-Y, --yes', 'Skip confirmations.' ],
 		[ '-v, --verbose', 'Output extra information with result messages.' ],
 	],
@@ -67,10 +69,11 @@ module.exports = {
 	 * @since 0.0.1
 	 * @since 0.2.1 Windows compatibility: account for spaces in file paths.
 	 * @since [version] Publish the release to an Easy Digital Downloads store when `--edd-download-id` is set.
+	 *              Announce the release in Slack when SLACK_WEBHOOK_URL is set.
 	 *
 	 * @return {void}
 	 */
-	action: async ( { archive, dir, commitMessage, branch, logfile, prerelease, prereleaseBranch, draft, merge, eddDownloadId, edd, yes, verbose } ) => {
+	action: async ( { archive, dir, commitMessage, branch, logfile, prerelease, prereleaseBranch, draft, merge, eddDownloadId, edd, slack, yes, verbose } ) => {
 		// Ensure the CLI is installed before proceeding.
 		try {
 			execSync( 'which gh', true );
@@ -239,6 +242,16 @@ module.exports = {
 			} catch ( err ) {
 				logResult( `The GitHub release was created but publishing to the EDD store failed. ${ err.message }`, 'error' );
 				process.exit( 1 );
+			}
+		}
+
+		// Announce the published release. The release is already out, so a failure here only warns.
+		if ( slack !== false && process.env.SLACK_WEBHOOK_URL && ! draft && ! prerelease ) {
+			try {
+				await notifySlack( { url: process.env.SLACK_WEBHOOK_URL, project: getProjectSlug(), version, notes, link: res } );
+				logResult( 'Release announced in Slack.', 'success' );
+			} catch ( err ) {
+				logResult( `The release is published, but the Slack announcement failed. Run \`release notify\` to retry. ${ err.message }`, 'warning' );
 			}
 		}
 	},

@@ -346,10 +346,34 @@ Options:
                                     published to the store.
   -E, --no-edd                      Skip publishing to the EDD store even when
                                     --edd-download-id is set.
+  -S, --no-slack                    Skip the Slack announcement even when the
+                                    SLACK_WEBHOOK_URL environment variable is
+                                    set.
   -Y, --yes                         Skip confirmations.
   -v, --verbose                     Output extra information with result
                                     messages.
   -h, --help                        display help for command
+
+```
+
+### release notify
+
+```bash
+Usage: index release notify [options]
+
+Announce a published release in Slack, with its changelog entry. `release
+create` does this itself; use this for releases published another way, such as
+to WordPress.org, or to retry. The webhook URL is read from the
+SLACK_WEBHOOK_URL environment variable.
+
+Options:
+  -r, --release-version <version>  Version to announce. Defaults to the current
+                                   version.
+  -u, --url <url>                  Link to the release, such as the plugin's
+                                   WordPress.org page or the GitHub release.
+  -l, --logfile <file>             Specify the changelog file. (default:
+                                   "CHANGELOG.md")
+  -h, --help                       display help for command
 
 ```
 
@@ -438,3 +462,11 @@ export EDD_RELEASE_SECRET="..."
 ```
 
 Before pushing anything, `release create` checks that the store accepts the secret and has the download, and stops if it doesn't. After `gh release create` it uploads `dist/<slug>-<version>.zip` and the same release notes used for the GitHub release. The store replaces the download's update file and sets the Software Licensing version, and adds the notes to the top of the Software Licensing changelog. Prereleases and drafts are not published to the store. Pass `--no-edd` to skip the store for one release.
+
+## Announcing releases in Slack
+
+When the `SLACK_WEBHOOK_URL` environment variable holds a Slack incoming webhook URL, `release create` posts "New release published: <slug> <version>" with the release notes and the GitHub release link once the release, and the EDD publish when configured, succeed. Prereleases and drafts aren't announced, and `--no-slack` skips it for one release. If Slack rejects the message the release still stands; run `release notify` to retry.
+
+Releases that don't use `release create`, such as WordPress.org releases through SVN, run `release notify -u <link>` after the release is live.
+
+GitHub workflows triggered by `release` events can't do this: they run from the tagged commit, and the `release` branch holds only the distribution files, so it has no `.github/workflows`.

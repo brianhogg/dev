@@ -1,0 +1,5 @@
+significance: minor
+type: added
+entry: "`release create` announces the release in Slack when the SLACK_WEBHOOK_URL
+  environment variable is set (skip with `--no-slack`), and the new `release notify`
+  command announces releases published another way, such as to WordPress.org."
