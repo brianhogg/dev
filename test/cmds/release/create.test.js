@@ -17,6 +17,8 @@ jest.mock( '../../../src/utils', () => ( {
 	logResult: jest.fn(),
 	checkEddDownload: jest.fn(),
 	publishToEdd: jest.fn(),
+	notifySlack: jest.fn(),
+	getProjectSlug: jest.fn( () => 'my-plugin' ),
 	pushDistFile: jest.fn(),
 } ) );
 
@@ -67,6 +69,7 @@ describe( 'release create', () => {
 			steps.push( 'publishToEdd' );
 			return { file: 'https://store.test/f.zip' };
 		} );
+		utils.notifySlack.mockImplementation( async () => steps.push( 'notifySlack' ) );
 		jest.spyOn( process, 'exit' ).mockImplementation( ( code ) => {
 			throw new Error( `exit ${ code }` );
 		} );
@@ -165,5 +168,56 @@ describe( 'release create', () => {
 
 		await expect( run( { eddDownloadId: '42' } ) ).rejects.toThrow( 'exit 1' );
 		expect( utils.logResult ).toHaveBeenLastCalledWith( expect.stringContaining( 'HTTP 403: Invalid or missing release secret.' ), 'error' );
+	} );
+
+	describe( 'Slack announcement', () => {
+		beforeEach( () => {
+			process.env.SLACK_WEBHOOK_URL = 'https://hooks.slack.test/abc';
+		} );
+
+		it( 'should announce the release last, after publishing to EDD, with the GitHub release link and notes', async () => {
+			await run( { eddDownloadId: '42' } );
+
+			expect( steps.slice( -2 ) ).toStrictEqual( [ 'publishToEdd', 'notifySlack' ] );
+			expect( utils.notifySlack ).toHaveBeenCalledWith( {
+				url: 'https://hooks.slack.test/abc',
+				project: 'my-plugin',
+				version: '1.2.3',
+				notes: NOTES,
+				link: 'https://github.com/o/r/releases/tag/1.2.3',
+			} );
+		} );
+
+		it.each( [
+			[ '--no-slack', { slack: false } ],
+			[ '--prerelease', { prerelease: true } ],
+			[ '--draft', { draft: true } ],
+		] )( 'should not announce with %s', async ( flag, opts ) => {
+			await run( opts );
+
+			expect( utils.notifySlack ).not.toHaveBeenCalled();
+		} );
+
+		it( 'should not announce when SLACK_WEBHOOK_URL is not set', async () => {
+			delete process.env.SLACK_WEBHOOK_URL;
+
+			await run();
+
+			expect( utils.notifySlack ).not.toHaveBeenCalled();
+		} );
+
+		it( 'should not announce when publishing to EDD fails', async () => {
+			utils.publishToEdd.mockRejectedValue( new Error( 'HTTP 500' ) );
+
+			await expect( run( { eddDownloadId: '42' } ) ).rejects.toThrow( 'exit 1' );
+			expect( utils.notifySlack ).not.toHaveBeenCalled();
+		} );
+
+		it( 'should only warn when the announcement fails, since the release is already published', async () => {
+			utils.notifySlack.mockRejectedValue( new Error( 'Slack responded with HTTP 404: no_service' ) );
+
+			await expect( run() ).resolves.toBeUndefined();
+			expect( utils.logResult ).toHaveBeenLastCalledWith( expect.stringContaining( 'HTTP 404: no_service' ), 'warning' );
+		} );
 	} );
 } );
